@@ -683,6 +683,9 @@ class Agent(Generic[Context]):
 			logger.debug(f'Using {self.tool_calling_method} for {self.chat_model_library}')
 			structured_llm = self.llm.with_structured_output(self.AgentOutput, include_raw=True, method=self.tool_calling_method)
 			response: dict[str, Any] = await structured_llm.ainvoke(input_messages)  # type: ignore
+			print(input_messages)
+			print("\n\n ========================================================= \n\n")
+			print(response)
 
 		# Handle tool call responses
 		if response.get('parsing_error') and 'raw' in response:
