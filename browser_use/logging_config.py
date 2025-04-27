@@ -108,6 +108,13 @@ def setup_logging():
 	browser_use_logger.addHandler(console)
 	browser_use_logger.setLevel(root.level)  # Set same level as root logger
 
+	log_file = os.getenv('BROWSER_USE_LOG_FILE', 'D:\\workplace\\browser_use_test\\browser-use\\logs\\browser_use.log')
+	# log_file = os.getenv('BROWSER_USE_LOG_FILE', '.\\logs\\browser_use.log')
+	file_handler = logging.FileHandler(log_file, mode='w', encoding='utf-8')
+	file_handler.setFormatter(BrowserUseFormatter('%(levelname)-8s [%(name)s] %(message)s'))
+	root.addHandler(file_handler)  # Add file handler to root logger
+	browser_use_logger.addHandler(file_handler)
+
 	logger = logging.getLogger('browser_use')
 	logger.info('BrowserUse logging setup complete with level %s', log_type)
 	# Silence third-party loggers

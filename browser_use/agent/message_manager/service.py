@@ -190,6 +190,8 @@ class MessageManager:
 		logger.debug(f'Messages in history: {len(self.state.history.messages)}:')
 		for m in self.state.history.messages:
 			total_input_tokens += m.metadata.tokens
+			# print(m)
+			# print("+++++++++++++++++++++++++++++++++++")
 			logger.debug(f'{m.message.__class__.__name__} - Token count: {m.metadata.tokens}')
 		logger.debug(f'Total input tokens: {total_input_tokens}')
 

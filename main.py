@@ -25,15 +25,16 @@ from browser_use import Controller, ActionResult
 # def ask_human(question: str) -> str:
 #     answer = input(f'\n{question}\nInput: ')
 #     return ActionResult(extracted_content=answer)
+config=BrowserConfig(
+    # Specify the path to your Chrome executable
+    # browser_binary_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',  # macOS path
+    browser_binary_path="C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+    # For Linux, typically: '/usr/bin/google-chrome'
+)
 
-# browser = Browser(
-#     config=BrowserConfig(
-#         # Specify the path to your Chrome executable
-#         # browser_binary_path='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',  # macOS path
-#         browser_binary_path='C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-#         # For Linux, typically: '/usr/bin/google-chrome'
-#     )
-# )
+browser = Browser(
+    config=config
+)
 
 # import logging
 
@@ -58,19 +59,15 @@ llm=ChatOpenAI(
 )
 # print(os.getenv("OPENAI_API_KEY"))
 # print(os.getenv("OPENAI_ENDPOINT"))
-'''
-agent = Agent(
-        task="去淘宝买一个小收纳箱",
-        llm=llm,
-)
-agent.run()
-'''
+
 
 async def main():
     agent = Agent(
-        task="去淘宝买一个小收纳箱",
+        task="在当前的淘宝页面输入‘星巴克馥芮白’并点击搜索，不要搜索其他url",
+        # task="你在购买页面，买一杯星巴克馥芮白，直接购买，不要加入购物车",
         llm=llm,
-        # browser=browser,
+        browser=browser,
+        generate_gif=True
     )
     await agent.run()
     await browser.close()

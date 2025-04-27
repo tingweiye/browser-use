@@ -56,10 +56,10 @@ async def test_window_size_pydantic_model():
 	assert config.browser_window_size == window_size
 
 	# You can also create from a dictionary
-	config2 = BrowserContextConfig(browser_window_size={'width': 1920, 'height': 1080})
+	config2 = BrowserContextConfig(browser_window_size={'width': 2560, 'height': 1440})
 	assert isinstance(config2.browser_window_size, BrowserContextWindowSize)
-	assert config2.browser_window_size.width == 1920
-	assert config2.browser_window_size.height == 1080
+	assert config2.browser_window_size.width == 2560
+	assert config2.browser_window_size.height == 1440
 
 
 @pytest.mark.asyncio

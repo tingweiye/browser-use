@@ -190,7 +190,8 @@ class Browser:
 			# Check if browser is already running
 			async with httpx.AsyncClient() as client:
 				response = await client.get('http://localhost:9222/json/version', timeout=2)
-				if response.status == 200:
+				print(response.status_code)
+				if response.status_code == 200:
 					logger.info('🔌  Reusing existing browser found running on http://localhost:9222')
 					browser_class = getattr(playwright, self.config.browser_class)
 					browser = await browser_class.connect_over_cdp(
@@ -213,21 +214,39 @@ class Browser:
 				*self.config.extra_browser_args,
 			},
 		]
-		self._chrome_subprocess = psutil.Process(
-			await asyncio.create_subprocess_shell(
-				chrome_launch_cmd,
-				stdout=subprocess.DEVNULL,
-				stderr=subprocess.DEVNULL,
-				shell=False,
-			).pid
+		print(chrome_launch_cmd)
+		# chrome_launch_cmd = " ".join(chrome_launch_cmd)
+		# print(chrome_launch_cmd)
+
+		# self._chrome_subprocess = psutil.Process(
+		# 	await asyncio.create_subprocess_shell(
+		# 		chrome_launch_cmd,
+		# 		stdout=subprocess.DEVNULL,
+		# 		stderr=subprocess.DEVNULL,
+		# 		shell=True,
+		# 	).pid
+		# )
+		proc = await asyncio.create_subprocess_exec(
+			*chrome_launch_cmd,
+			stdout=subprocess.DEVNULL,
+			stderr=subprocess.DEVNULL,
+			shell=False,
 		)
+
+		# stdout, stderr = await proc.communicate()
+
+		# print("Chrome STDOUT:", stdout.decode())
+		# print("Chrome STDERR:", stderr.decode())
+		# print("Chrome return code:", proc.returncode)
+
+		self._chrome_subprocess = psutil.Process(proc.pid)
 
 		# Attempt to connect again after starting a new instance
 		for _ in range(10):
 			try:
 				async with httpx.AsyncClient() as client:
 					response = await client.get('http://localhost:9222/json/version', timeout=2)
-					if response.status == 200:
+					if response.status_code == 200:
 						break
 			except httpx.RequestError:
 				pass
@@ -252,7 +271,7 @@ class Browser:
 		assert self.config.browser_binary_path is None, 'browser_binary_path should be None if trying to use the builtin browsers'
 
 		if self.config.headless:
-			screen_size = {'width': 1920, 'height': 1080}
+			screen_size = {'width': 2560, 'height': 1440}
 			offset_x, offset_y = 0, 0
 		else:
 			screen_size = get_screen_resolution()
@@ -312,6 +331,7 @@ class Browser:
 			if self.config.headless:
 				logger.warning('⚠️ Headless mode is not recommended. Many sites will detect and block all headless browsers.')
 
+			print(self.config.browser_binary_path)
 			if self.config.browser_binary_path:
 				return await self._setup_user_provided_browser(playwright)
 			else:

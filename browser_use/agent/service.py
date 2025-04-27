@@ -426,7 +426,8 @@ class Agent(Generic[Context]):
 
 			# Get page-specific filtered actions
 			page_filtered_actions = self.controller.registry.get_prompt_description(active_page)
-
+			# print(page_filtered_actions)
+			
 			# If there are page-specific actions, add them as a special message for this step only
 			if page_filtered_actions:
 				page_action_message = f'For this page, these additional actions are available:\n{page_filtered_actions}'
@@ -683,9 +684,9 @@ class Agent(Generic[Context]):
 			logger.debug(f'Using {self.tool_calling_method} for {self.chat_model_library}')
 			structured_llm = self.llm.with_structured_output(self.AgentOutput, include_raw=True, method=self.tool_calling_method)
 			response: dict[str, Any] = await structured_llm.ainvoke(input_messages)  # type: ignore
-			print(input_messages)
-			print("\n\n ========================================================= \n\n")
-			print(response)
+			# print(input_messages)
+			# print("\n\n ========================================================= \n\n")
+			# print(response)
 
 		# Handle tool call responses
 		if response.get('parsing_error') and 'raw' in response:
@@ -1233,23 +1234,24 @@ class Agent(Generic[Context]):
 		test_answer = 'paris'
 		try:
 			# dont convert this to async! it *should* block any subsequent llm calls from running
-			response = self.llm.invoke([HumanMessage(content=test_prompt)])  # noqa: ASYNC
-			response_text = str(response.content).lower()
+			# response = self.llm.invoke([HumanMessage(content=test_prompt)])  # noqa: ASYNC
+			# response_text = str(response.content).lower()
 
-			if test_answer in response_text:
-				logger.debug(
-					f'🪪 LLM API keys {", ".join(required_keys)} work, {self.llm.__class__.__name__} model is connected & responding correctly.'
-				)
-				self.llm._verified_api_keys = True
-				return True
-			else:
-				logger.warning(
-					'❌  Got bad LLM response to basic sanity check question: \n\t  %s\n\t\tEXPECTING: %s\n\t\tGOT: %s',
-					test_prompt,
-					test_answer,
-					response,
-				)
-				raise Exception('LLM responded to a simple test question incorrectly')
+			# if test_answer in response_text:
+			# 	logger.debug(
+			# 		f'🪪 LLM API keys {", ".join(required_keys)} work, {self.llm.__class__.__name__} model is connected & responding correctly.'
+			# 	)
+			# 	self.llm._verified_api_keys = True
+			# 	return True
+			# else:
+			# 	logger.warning(
+			# 		'❌  Got bad LLM response to basic sanity check question: \n\t  %s\n\t\tEXPECTING: %s\n\t\tGOT: %s',
+			# 		test_prompt,
+			# 		test_answer,
+			# 		response,
+			# 	)
+			# 	raise Exception('LLM responded to a simple test question incorrectly')
+			...
 		except Exception as e:
 			self.llm._verified_api_keys = False
 			logger.error(

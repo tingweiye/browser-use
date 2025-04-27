@@ -163,8 +163,11 @@ class BrowserContextConfig(BaseModel):
 	disable_security: bool = False  # disable_security=True is dangerous as any malicious URL visited could embed an iframe for the user's bank, and use their cookies to steal money
 
 	browser_window_size: BrowserContextWindowSize = Field(
-		default_factory=lambda: BrowserContextWindowSize(width=1280, height=1100)
+		default_factory=lambda: BrowserContextWindowSize(width=1920, height=1080)
 	)
+	# browser_window_size: BrowserContextWindowSize = Field(
+	# 	default_factory=lambda: BrowserContextWindowSize(width=1280, height=1100)
+	# )
 	no_viewport: Optional[bool] = None
 
 	save_recording_path: str | None = None
@@ -386,9 +389,15 @@ class BrowserContext:
 				active_page = pages[0]
 				logger.debug('🔍  Using existing page: %s', active_page.url)
 			else:
-				active_page = await context.new_page()
-				await active_page.goto('about:blank')
+				active_page = await context.new_page()  #open browser page
+				# await active_page.goto('about:blank')
+				await active_page.goto('file:///d%3A/workplace/browser_use_test/test_cases/taobao_search.html', wait_until="domcontentloaded")
+				# await active_page.goto('https://item.taobao.com/item.htm?abbucket=3&detail_redpacket_pop=true&id=664873985153&ltk2=1745500044645m6o4p638ib99dxbu7u8j8&ns=1&priceTId=213e03b917455000409097380e1d34&query=%E6%98%9F%E5%B7%B4%E5%85%8B&skuId=5182919107671&spm=a21n57.1.hoverItem.2&utparam=%7B%22aplus_abtest%22%3A%22ff49245b235cedc4763f794602d8bea0%22%7D&xxc=taobaoSearch')
+				
 				logger.debug('🆕  Created new page: %s', active_page.url)
+
+			# For test purposes  
+			await active_page.goto('file:///d%3A/workplace/browser_use_test/test_cases/taobao_search.html', wait_until="domcontentloaded")
 
 			# Get target ID for the active page
 			if self.browser.config.cdp_url:
@@ -977,7 +986,8 @@ class BrowserContext:
 				url=page.url,
 				title=await page.title(),
 				tabs=tabs_info,
-				screenshot=screenshot_b64,
+				screenshot=None,
+				# screenshot=screenshot_b64,
 				pixels_above=pixels_above,
 				pixels_below=pixels_below,
 			)
