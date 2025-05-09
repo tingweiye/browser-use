@@ -215,12 +215,14 @@ class Controller(Generic[Context]):
 			return ActionResult(extracted_content=msg, include_in_memory=True)
 
 		# Content Actions
-		@self.registry.action(
-			'Extract page content to retrieve specific information from the page, e.g. all company names, a specific description, all information about, links with companies in structured format or simply links',
-		)
+		# @self.registry.action(
+		# 	'Extract page content to retrieve specific information from the page, e.g. all company names, a specific description, all information about, links with companies in structured format or simply links',
+		# )
 		async def extract_content(
 			goal: str, should_strip_link_urls: bool, browser: BrowserContext, page_extraction_llm: BaseChatModel
 		):
+			import time
+			t1 = time.time()
 			page = await browser.get_current_page()
 			import markdownify
 
@@ -229,6 +231,10 @@ class Controller(Generic[Context]):
 				strip = ['a', 'img']
 
 			content = markdownify.markdownify(await page.content(), strip=strip)
+			with open(f"output_{t1}.md", "w", encoding="utf-8") as f:
+				f.write(content)
+			with open(f"output_html_{t1}.md", "w", encoding="utf-8") as f:
+				f.write(await page.content())
 
 			# manually append iframe text into the content so it's readable by the LLM (includes cross-origin iframes)
 			for iframe in page.frames:
@@ -238,10 +244,13 @@ class Controller(Generic[Context]):
 
 			prompt = 'Your task is to extract the content of the page. You will be given a page and a goal and you should extract all relevant information around this goal from the page. If the goal is vague, summarize the page. Respond in json format. Extraction goal: {goal}, Page: {page}'
 			template = PromptTemplate(input_variables=['goal', 'page'], template=prompt)
+			# t2 = time.time()
 			try:
 				output = await page_extraction_llm.ainvoke(template.format(goal=goal, page=content))
 				msg = f'📄  Extracted from page\n: {output.content}\n'
 				logger.info(msg)
+				# t3 = time.time()
+				# print(f"Markdown convertion time: {t2 - t1}; LLM respond time: {t3 - t2}")
 				return ActionResult(extracted_content=msg, include_in_memory=True)
 			except Exception as e:
 				logger.debug(f'Error extracting content: {e}')

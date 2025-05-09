@@ -426,7 +426,6 @@ class Agent(Generic[Context]):
 
 			# Get page-specific filtered actions
 			page_filtered_actions = self.controller.registry.get_prompt_description(active_page)
-			# print(page_filtered_actions)
 			
 			# If there are page-specific actions, add them as a special message for this step only
 			if page_filtered_actions:
@@ -511,6 +510,7 @@ class Agent(Generic[Context]):
 			result: list[ActionResult] = await self.multi_act(model_output.action)
 
 			self.state.last_result = result
+			print(result)
 
 			if len(result) > 0 and result[-1].is_done:
 				logger.info(f'📄 Result: {result[-1].extracted_content}')
@@ -684,6 +684,7 @@ class Agent(Generic[Context]):
 			logger.debug(f'Using {self.tool_calling_method} for {self.chat_model_library}')
 			structured_llm = self.llm.with_structured_output(self.AgentOutput, include_raw=True, method=self.tool_calling_method)
 			response: dict[str, Any] = await structured_llm.ainvoke(input_messages)  # type: ignore
+			logger.debug(input_messages[-1])
 			# print(input_messages)
 			# print("\n\n ========================================================= \n\n")
 			# print(response)
@@ -804,7 +805,6 @@ class Agent(Generic[Context]):
 
 		try:
 			self._log_agent_run()
-
 			# Execute initial actions if provided
 			if self.initial_actions:
 				result = await self.multi_act(self.initial_actions, check_for_new_elements=False)

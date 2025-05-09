@@ -190,9 +190,8 @@ class MessageManager:
 		logger.debug(f'Messages in history: {len(self.state.history.messages)}:')
 		for m in self.state.history.messages:
 			total_input_tokens += m.metadata.tokens
-			# print(m)
-			# print("+++++++++++++++++++++++++++++++++++")
 			logger.debug(f'{m.message.__class__.__name__} - Token count: {m.metadata.tokens}')
+			# logger.debug(m.message)
 		logger.debug(f'Total input tokens: {total_input_tokens}')
 
 		return msg
@@ -320,4 +319,5 @@ class MessageManager:
 		"""Add tool message to history"""
 		msg = ToolMessage(content=content, tool_call_id=str(self.state.tool_id))
 		self.state.tool_id += 1
+		# print(f"Tool {self.state.tool_id}:", msg)
 		self._add_message_with_tokens(msg, message_type=message_type)

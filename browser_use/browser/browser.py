@@ -215,7 +215,8 @@ class Browser:
 			},
 		]
 		print(chrome_launch_cmd)
-		# chrome_launch_cmd = " ".join(chrome_launch_cmd)
+		cmd = " ".join(chrome_launch_cmd)
+		print(cmd)
 		# print(chrome_launch_cmd)
 
 		# self._chrome_subprocess = psutil.Process(
@@ -235,11 +236,12 @@ class Browser:
 
 		# stdout, stderr = await proc.communicate()
 
-		# print("Chrome STDOUT:", stdout.decode())
-		# print("Chrome STDERR:", stderr.decode())
+		# print("Chrome STDOUT:", stdout)
+		# print("Chrome STDERR:", stderr)
 		# print("Chrome return code:", proc.returncode)
 
 		self._chrome_subprocess = psutil.Process(proc.pid)
+
 
 		# Attempt to connect again after starting a new instance
 		for _ in range(10):

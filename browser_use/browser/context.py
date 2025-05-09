@@ -284,6 +284,8 @@ class BrowserContext:
 		# Initialize these as None - they'll be set up when needed
 		self.session: BrowserSession | None = None
 		self.active_tab: Page | None = None
+		self.latest_tab_num: int = 0
+
 
 	async def __aenter__(self):
 		"""Async context manager entry"""
@@ -364,6 +366,9 @@ class BrowserContext:
 			cached_state=None,
 		)
 
+
+		self._add_new_page_listener(self.session.context)
+
 		active_page = None
 		if self.browser.config.cdp_url:
 			# If we have a saved target ID, try to find and activate it
@@ -390,14 +395,15 @@ class BrowserContext:
 				logger.debug('🔍  Using existing page: %s', active_page.url)
 			else:
 				active_page = await context.new_page()  #open browser page
-				# await active_page.goto('about:blank')
-				await active_page.goto('file:///d%3A/workplace/browser_use_test/test_cases/taobao_search.html', wait_until="domcontentloaded")
-				# await active_page.goto('https://item.taobao.com/item.htm?abbucket=3&detail_redpacket_pop=true&id=664873985153&ltk2=1745500044645m6o4p638ib99dxbu7u8j8&ns=1&priceTId=213e03b917455000409097380e1d34&query=%E6%98%9F%E5%B7%B4%E5%85%8B&skuId=5182919107671&spm=a21n57.1.hoverItem.2&utparam=%7B%22aplus_abtest%22%3A%22ff49245b235cedc4763f794602d8bea0%22%7D&xxc=taobaoSearch')
+				await active_page.goto('about:blank', wait_until="load", timeout=80000)
+				# await active_page.goto('file:///d%3A/workplace/browser_use_test/test_cases/taobao_search_altered.html', wait_until="load")
+				# await active_page.goto('file:///d%3A/workplace/browser_use_test/test_cases/choose_drink_altered.html', wait_until="load", timeout=80000)
 				
 				logger.debug('🆕  Created new page: %s', active_page.url)
 
-			# For test purposes  
-			await active_page.goto('file:///d%3A/workplace/browser_use_test/test_cases/taobao_search.html', wait_until="domcontentloaded")
+			# await active_page.goto('https://huodong.taobao.com/wow/a/act/tao/dailygroup/23509/24308/wupr?spm=a21bo.jianhua/a.201856-fline.1.454b2a89hWXHsM&wh_pid=daily-565044&disableNav=YES&status_bar_transparent=true', wait_until="load", timeout=80000)
+			# await active_page.goto('https://www.taobao.com/', wait_until="load", timeout=80000)
+			await active_page.goto('https://item.taobao.com/item.htm?abbucket=14&detail_redpacket_pop=true&id=855771605095&ltk2=174677990895634z5st6ifvx8r7qhwinn1e&ns=1&priceTId=undefined&query=KFC%E9%A6%99%E8%BE%A3%E9%B8%A1%E8%85%BF%E5%A0%A1%E4%B8%A4%E4%BB%B6%E5%A5%97&skuId=5827046614141&spm=a21n57.1.hoverItem.1&utparam=%7B%22aplus_abtest%22%3A%220580e73ae073ec87f17de50cd0bab541%22%7D&xxc=taobaoSearch', wait_until="load", timeout=80000)
 
 			# Get target ID for the active page
 			if self.browser.config.cdp_url:
@@ -1435,6 +1441,7 @@ class BrowserContext:
 					# Standard click logic if no download is expected
 					await click_func()
 					await page.wait_for_load_state()
+					#!!!!!!!!!!!!!!!!!!!!!!!!!!!
 					await self._check_and_handle_navigation(page)
 
 			try:
@@ -1529,6 +1536,7 @@ class BrowserContext:
 	# region - Helper methods for easier access to the DOM
 	async def _get_current_page(self, session: BrowserSession) -> Page:
 		pages = session.context.pages
+		num_pages = len(pages)
 
 		# Try to find page by target ID if using CDP
 		if self.browser.config.cdp_url and self.state.target_id:
@@ -1538,8 +1546,11 @@ class BrowserContext:
 					for page in pages:
 						if page.url == target['url']:
 							return page
-
-		if self.active_tab and self.active_tab in session.context.pages and not self.active_tab.is_closed():
+						
+		# print(session.context.pages)
+		# print(self.active_tab)
+		# logger.debug(f'Current active tab: {self.active_tab}, tab number: {len(session.context.pages)}')
+		if self.active_tab and self.active_tab in session.context.pages and not self.active_tab.is_closed() and num_pages==self.latest_tab_num:
 			return self.active_tab
 
 		# fall back to most recently opened non-extension page (extensions are almost always invisible background targets)

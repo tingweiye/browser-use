@@ -279,6 +279,7 @@ def time_execution_sync(additional_text: str = '') -> Callable[[Callable[P, R]],
 	def decorator(func: Callable[P, R]) -> Callable[P, R]:
 		@wraps(func)
 		def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+			logger.debug(f'{additional_text} task started')
 			start_time = time.time()
 			result = func(*args, **kwargs)
 			execution_time = time.time() - start_time
@@ -296,6 +297,7 @@ def time_execution_async(
 	def decorator(func: Callable[P, Coroutine[Any, Any, R]]) -> Callable[P, Coroutine[Any, Any, R]]:
 		@wraps(func)
 		async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+			logger.debug(f'{additional_text} task started')
 			start_time = time.time()
 			result = await func(*args, **kwargs)
 			execution_time = time.time() - start_time
