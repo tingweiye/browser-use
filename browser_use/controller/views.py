@@ -17,6 +17,10 @@ class ClickElementAction(BaseModel):
 	xpath: Optional[str] = None
 
 
+class GetElementXpathAction(BaseModel):
+	index: int
+
+
 class InputTextAction(BaseModel):
 	index: int
 	text: str

@@ -17,6 +17,7 @@ from browser_use.browser.context import BrowserContext
 from browser_use.controller.registry.service import Registry
 from browser_use.controller.views import (
 	ClickElementAction,
+	GetElementXpathAction,
 	CloseTabAction,
 	DoneAction,
 	DragDropAction,
@@ -123,6 +124,12 @@ class Controller(Generic[Context]):
 				raise Exception(f'Element with index {params.index} does not exist - retry or use alternative actions')
 
 			element_node = await browser.get_dom_element_by_index(params.index)
+
+			cls_name = element_node.attributes.get("class", "")
+			# If the node was already selected, do nothing  (TO BE OPTIMIZED)
+			if 'selected' in cls_name.lower():
+				return ActionResult(extracted_content='Element already selected. No need to select again.', include_in_memory=True)
+
 			initial_pages = len(session.context.pages)
 
 			# if element has file uploader then dont click
@@ -151,6 +158,26 @@ class Controller(Generic[Context]):
 			except Exception as e:
 				logger.warning(f'Element not clickable with index {params.index} - most likely the page changed')
 				return ActionResult(error=str(e))
+			
+		
+		# Element Interaction Actions
+		@self.registry.action('Get xpath by index', param_model=GetElementXpathAction)
+		async def get_xpath_by_index(params: GetElementXpathAction, browser: BrowserContext):
+			session = await browser.get_session()
+
+			if params.index not in await browser.get_selector_map():
+				raise Exception(f'Element with index {params.index} does not exist - retry or use alternative actions')
+
+			element_node = await browser.get_dom_element_by_index(params.index)
+
+			try:
+				xpath = element_node.xpath
+				logger.debug(f'Get element xpath: {xpath}')
+				return ActionResult(extracted_content=f'Successfully get element xpath: {xpath}', include_in_memory=True)
+			except Exception as e:
+				logger.warning(f'Element not clickable with index {params.index} - most likely the page changed')
+				return ActionResult(error=str(e))
+			
 
 		@self.registry.action(
 			'Input text into a input interactive element',

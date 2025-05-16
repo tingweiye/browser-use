@@ -412,8 +412,12 @@ class Agent(Generic[Context]):
 		tokens = 0
 
 		try:
+			await asyncio.sleep(8)  # Force 8s of page load
+			print("Force wait completed.")
 			state = await self.browser_context.get_state(cache_clickable_elements_hashes=True)
+			
 			active_page = await self.browser_context.get_current_page()
+			
 
 			# generate procedural memory if needed
 			if self.enable_memory and self.memory and self.state.n_steps % self.memory.config.memory_interval == 0:
@@ -683,8 +687,9 @@ class Agent(Generic[Context]):
 		else:
 			logger.debug(f'Using {self.tool_calling_method} for {self.chat_model_library}')
 			structured_llm = self.llm.with_structured_output(self.AgentOutput, include_raw=True, method=self.tool_calling_method)
-			response: dict[str, Any] = await structured_llm.ainvoke(input_messages)  # type: ignore
 			logger.debug(input_messages[-1])
+			response: dict[str, Any] = await structured_llm.ainvoke(input_messages)  # type: ignore
+			
 			# print(input_messages)
 			# print("\n\n ========================================================= \n\n")
 			# print(response)
@@ -917,6 +922,7 @@ class Agent(Generic[Context]):
 
 		for i, action in enumerate(actions):
 			if action.get_index() is not None and i != 0:
+				# await asyncio.sleep(1.5)
 				new_state = await self.browser_context.get_state(cache_clickable_elements_hashes=False)
 				new_selector_map = new_state.selector_map
 

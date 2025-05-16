@@ -580,6 +580,7 @@
       // 'auto',        // Browser default
     ]);
 
+    // console.log('0 Check event listeners for:', element.tagName, element.className);
     function doesElementHaveInteractivePointer(element) {
       if (element.tagName.toLowerCase() === "html") return false;
       const style = getCachedComputedStyle(element);
@@ -706,8 +707,9 @@
 
     // check whether element has event listeners
     try {
-      if (typeof getEventListeners === 'function') {
-        const listeners = getEventListeners(element);
+      if (typeof window.getEventListeners === 'function') {
+        console.log('0.5 Check event listeners for', element.__listeners);
+        const listeners = window.getEventListeners(element);
         const mouseEvents = ['click', 'mousedown', 'mouseup', 'dblclick'];
         for (const eventType of mouseEvents) {
           if (listeners[eventType] && listeners[eventType].length > 0) {
@@ -725,7 +727,8 @@
       // console.warn(`Could not check event listeners for ${element.tagName}:`, e);
       // If checking listeners fails, rely on other checks
     }
-
+    // console.log('Check event listeners for', element.__listeners);
+    // console.log('1 Check event listeners for', element.tagName);
     return false
   }
 
@@ -1129,6 +1132,14 @@
       const attributeNames = node.getAttributeNames?.() || [];
       for (const name of attributeNames) {
         nodeData.attributes[name] = node.getAttribute(name);
+      }
+    }
+
+    const forcedAttributes = ['class', 'id'];
+    for (const attr of forcedAttributes) {
+      const value = node.getAttribute(attr);
+      if (value !== null) {
+        nodeData.attributes[attr] = value;
       }
     }
 

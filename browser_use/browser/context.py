@@ -37,6 +37,7 @@ from browser_use.dom.clickable_element_processor.service import ClickableElement
 from browser_use.dom.service import DomService
 from browser_use.dom.views import DOMElementNode, SelectorMap
 from browser_use.utils import time_execution_async, time_execution_sync
+from playwright_stealth import stealth_async
 
 if TYPE_CHECKING:
 	from browser_use.browser.browser import Browser
@@ -208,6 +209,7 @@ class BrowserSession:
 		init_script = """
 			(() => {
 				if (!window.getEventListeners) {
+					console.log('Initial script injected');
 					window.getEventListeners = function (node) {
 						return node.__listeners || {};
 					};
@@ -247,6 +249,7 @@ class BrowserSession:
 
 					Element.prototype.addEventListener = eventProxy.addEventListener;
 				}
+				console.log('Initial script ended');
 			})()
 			"""
 		self.active_tab = None
@@ -313,7 +316,7 @@ class BrowserContext:
 					logger.debug(f'Failed to remove CDP listener: {e}')
 				self._page_event_handler = None
 
-			await self.save_cookies()
+			# await self.save_cookies()
 
 			if self.config.trace_path:
 				try:
@@ -395,15 +398,17 @@ class BrowserContext:
 				logger.debug('🔍  Using existing page: %s', active_page.url)
 			else:
 				active_page = await context.new_page()  #open browser page
+				await stealth_async(active_page)
+
+				# active_page.add_init_script("""
+				# 	Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+				# """)
+
 				await active_page.goto('about:blank', wait_until="load", timeout=80000)
-				# await active_page.goto('file:///d%3A/workplace/browser_use_test/test_cases/taobao_search_altered.html', wait_until="load")
-				# await active_page.goto('file:///d%3A/workplace/browser_use_test/test_cases/choose_drink_altered.html', wait_until="load", timeout=80000)
 				
 				logger.debug('🆕  Created new page: %s', active_page.url)
 
-			# await active_page.goto('https://huodong.taobao.com/wow/a/act/tao/dailygroup/23509/24308/wupr?spm=a21bo.jianhua/a.201856-fline.1.454b2a89hWXHsM&wh_pid=daily-565044&disableNav=YES&status_bar_transparent=true', wait_until="load", timeout=80000)
-			# await active_page.goto('https://www.taobao.com/', wait_until="load", timeout=80000)
-			await active_page.goto('https://item.taobao.com/item.htm?abbucket=14&detail_redpacket_pop=true&id=855771605095&ltk2=174677990895634z5st6ifvx8r7qhwinn1e&ns=1&priceTId=undefined&query=KFC%E9%A6%99%E8%BE%A3%E9%B8%A1%E8%85%BF%E5%A0%A1%E4%B8%A4%E4%BB%B6%E5%A5%97&skuId=5827046614141&spm=a21n57.1.hoverItem.1&utparam=%7B%22aplus_abtest%22%3A%220580e73ae073ec87f17de50cd0bab541%22%7D&xxc=taobaoSearch', wait_until="load", timeout=80000)
+			await active_page.goto('about:blank', wait_until="load", timeout=80000)
 
 			# Get target ID for the active page
 			if self.browser.config.cdp_url:
@@ -475,6 +480,8 @@ class BrowserContext:
 				record_video_dir=self.config.save_recording_path,
 				record_video_size=self.config.browser_window_size.model_dump(),
 				record_har_path=self.config.save_har_path,
+				# locale='zh-CN',
+				# extra_http_headers={"Accept-Language": "zh-CN,zh;q=0.9"},
 				locale=self.config.locale,
 				http_credentials=self.config.http_credentials,
 				is_mobile=self.config.is_mobile,
@@ -489,6 +496,7 @@ class BrowserContext:
 
 		# Load cookies if they exist
 		if self.config.cookies_file and os.path.exists(self.config.cookies_file):
+			print("Cookies!!!!!!!")
 			async with await anyio.open_file(self.config.cookies_file, 'r') as f:
 				try:
 					cookies = json.loads(await f.read())
@@ -692,6 +700,7 @@ class BrowserContext:
 
 		logger.debug(f'⚖️  Network stabilized for {self.config.wait_for_network_idle_page_load_time} seconds')
 
+	@time_execution_async('--_wait_for_page_and_frames_load')
 	async def _wait_for_page_and_frames_load(self, timeout_overwrite: float | None = None):
 		"""
 		Ensures page is fully loaded before continuing.
@@ -927,8 +936,8 @@ class BrowserContext:
 		session.cached_state = updated_state
 
 		# Save cookies if a file is specified
-		if self.config.cookies_file:
-			asyncio.create_task(self.save_cookies())
+		# if self.config.cookies_file:
+		# 	asyncio.create_task(self.save_cookies())
 
 		return session.cached_state
 
